@@ -14,7 +14,7 @@ export const NotificationService = {
     setTimeout(() => {
       this.playTingSound();
       Alert.alert(
-        `⏰ Household Alert: ${title}`,
+        `!!! Household Alert: ${title}`,
         `The timer for "${title}" has completed!`,
         [{ text: "Dismiss", style: "cancel" }],
       );
