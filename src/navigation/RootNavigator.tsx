@@ -6,6 +6,7 @@ import {
   ListTodo,
   Timer as TimerIcon,
   Wrench,
+  MessageCircle,
   User,
 } from "lucide-react-native";
 
@@ -16,13 +17,17 @@ import { DashboardScreen } from "../features/dashboard/DashboardScreen";
 import { ListsScreen } from "../features/lists/ListsScreen";
 import { TimerScreen } from "../features/timer/TimerScreen";
 import { HomeHubScreen } from "../features/home-hub/HomeHubScreen";
+import { ChatScreen } from "../chat/ChatScreen";
 import { ProfileScreen } from "../features/profile/ProfileScreen";
-import { Theme } from "../core/theme";
+import { useAppTheme } from "../core/theme";
 import { ActivityIndicator, View } from "react-native";
 
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
+  // 1. Initialize the dynamic theme for the tab bar
+  const Theme = useAppTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -67,6 +72,13 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{
+          tabBarIcon: ({ color }) => <MessageCircle size={24} color={color} />,
+        }}
+      />
+      <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
@@ -80,13 +92,14 @@ const TabNavigator = () => {
 export const RootNavigator = () => {
   const { session, setSession, isInitialized } = useAuthStore();
 
+  // 2. Initialize the dynamic theme for the loading screen
+  const Theme = useAppTheme();
+
   useEffect(() => {
-    // 1. Check if user is already logged in on app startup
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
 
-    // 2. Listen for login/logout events securely
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -113,7 +126,6 @@ export const RootNavigator = () => {
 
   return (
     <NavigationContainer>
-      {/* The Gatekeeper: If session exists, show App. If not, show Login. */}
       {session ? <TabNavigator /> : <AuthScreen />}
     </NavigationContainer>
   );

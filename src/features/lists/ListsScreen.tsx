@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { Plus } from "lucide-react-native";
-import { Theme } from "../../core/theme";
+import { useAppTheme } from "../../core/theme";
 import { ItemCategory, useListStore } from "./hooks/useListStore";
 import { ListItemCard } from "./components/ListItemCard";
 
@@ -22,6 +22,10 @@ const CATEGORIES: { label: string; value: ItemCategory }[] = [
 ];
 
 export const ListsScreen = () => {
+  // 1. Initialize the dynamic theme
+  const Theme = useAppTheme();
+  const styles = createStyles(Theme);
+
   const [inputText, setInputText] = useState("");
   const {
     items,
@@ -122,84 +126,86 @@ export const ListsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  header: {
-    paddingHorizontal: Theme.spacing.md,
-    paddingTop: 60,
-    paddingBottom: Theme.spacing.sm,
-  },
-  subtitle: {
-    ...Theme.typography.caption,
-    marginTop: Theme.spacing.xs,
-  },
-  categoryRow: {
-    flexDirection: "row",
-    paddingHorizontal: Theme.spacing.md,
-    marginVertical: Theme.spacing.sm,
-  },
-  categoryChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: Theme.radii.full,
-    backgroundColor: Theme.colors.surface,
-    marginRight: Theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  categoryChipActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  categoryText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: Theme.colors.textSecondary,
-  },
-  categoryTextActive: {
-    color: "#FFFFFF",
-  },
-  listContainer: {
-    paddingHorizontal: Theme.spacing.md,
-    paddingTop: Theme.spacing.sm,
-    paddingBottom: 100,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 60,
-  },
-  emptyText: {
-    ...Theme.typography.caption,
-    color: Theme.colors.textSecondary,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    padding: Theme.spacing.md,
-    backgroundColor: Theme.colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.border,
-    alignItems: "center",
-  },
-  input: {
-    flex: 1,
-    height: 44,
-    backgroundColor: Theme.colors.background,
-    borderRadius: Theme.radii.sm,
-    paddingHorizontal: Theme.spacing.md,
-    fontSize: 15,
-    color: Theme.colors.textPrimary,
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Theme.radii.sm,
-    backgroundColor: Theme.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: Theme.spacing.sm,
-  },
-});
+// 2. Wrap the styles in a function that receives the Theme
+const createStyles = (Theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Theme.colors.background,
+    },
+    header: {
+      paddingHorizontal: Theme.spacing.md,
+      paddingTop: 60,
+      paddingBottom: Theme.spacing.sm,
+    },
+    subtitle: {
+      ...Theme.typography.caption,
+      marginTop: Theme.spacing.xs,
+    },
+    categoryRow: {
+      flexDirection: "row",
+      paddingHorizontal: Theme.spacing.md,
+      marginVertical: Theme.spacing.sm,
+    },
+    categoryChip: {
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: Theme.radii.full,
+      backgroundColor: Theme.colors.surface,
+      marginRight: Theme.spacing.sm,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+    },
+    categoryChipActive: {
+      backgroundColor: Theme.colors.primary,
+      borderColor: Theme.colors.primary,
+    },
+    categoryText: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: Theme.colors.textSecondary,
+    },
+    categoryTextActive: {
+      color: "#FFFFFF",
+    },
+    listContainer: {
+      paddingHorizontal: Theme.spacing.md,
+      paddingTop: Theme.spacing.sm,
+      paddingBottom: 100,
+    },
+    emptyContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingTop: 60,
+    },
+    emptyText: {
+      ...Theme.typography.caption,
+      color: Theme.colors.textSecondary,
+    },
+    inputContainer: {
+      flexDirection: "row",
+      padding: Theme.spacing.md,
+      backgroundColor: Theme.colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: Theme.colors.border,
+      alignItems: "center",
+    },
+    input: {
+      flex: 1,
+      height: 44,
+      backgroundColor: Theme.colors.background,
+      borderRadius: Theme.radii.sm,
+      paddingHorizontal: Theme.spacing.md,
+      fontSize: 15,
+      color: Theme.colors.textPrimary,
+    },
+    addButton: {
+      width: 44,
+      height: 44,
+      borderRadius: Theme.radii.sm,
+      backgroundColor: Theme.colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      marginLeft: Theme.spacing.sm,
+    },
+  });

@@ -19,10 +19,13 @@ import {
   Plus,
   X,
 } from "lucide-react-native";
-import { Theme } from "../../core/theme";
+import { useAppTheme } from "../../core/theme";
 import { useHomeHubStore, Bill, Appliance } from "./hooks/useHomeHubStore";
 
 export const HomeHubScreen = () => {
+  const Theme = useAppTheme();
+  const styles = createStyles(Theme);
+
   const {
     activeTab,
     setActiveTab,
@@ -180,16 +183,24 @@ export const HomeHubScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Dynamic List */}
-      <FlatList
-        data={activeTab === "bills" ? bills : appliances}
-        keyExtractor={(item) => item.id}
-        renderItem={
-          activeTab === "bills" ? renderBill : (renderAppliance as any)
-        }
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {/* Dynamic List FIX: Split into two separate lists so TypeScript understands the data structures */}
+      {activeTab === "bills" ? (
+        <FlatList
+          data={bills}
+          keyExtractor={(item) => item.id}
+          renderItem={renderBill}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <FlatList
+          data={appliances}
+          keyExtractor={(item) => item.id}
+          renderItem={renderAppliance}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
       {/* Floating Action Button */}
       <TouchableOpacity
@@ -273,153 +284,158 @@ export const HomeHubScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
-  header: {
-    paddingHorizontal: Theme.spacing.md,
-    paddingTop: 60,
-    paddingBottom: Theme.spacing.sm,
-  },
-  subtitleText: { ...Theme.typography.caption, marginTop: Theme.spacing.xs },
+const createStyles = (Theme: any) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: Theme.colors.background },
+    header: {
+      paddingHorizontal: Theme.spacing.md,
+      paddingTop: 60,
+      paddingBottom: Theme.spacing.sm,
+    },
+    subtitleText: { ...Theme.typography.caption, marginTop: Theme.spacing.xs },
 
-  tabContainer: {
-    flexDirection: "row",
-    marginHorizontal: Theme.spacing.md,
-    backgroundColor: Theme.colors.border,
-    padding: 4,
-    borderRadius: Theme.radii.md,
-    marginBottom: Theme.spacing.md,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: "center",
-    borderRadius: Theme.radii.sm,
-  },
-  activeTab: {
-    backgroundColor: Theme.colors.surface,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Theme.colors.textSecondary,
-  },
-  activeTabText: { color: Theme.colors.primary },
+    tabContainer: {
+      flexDirection: "row",
+      marginHorizontal: Theme.spacing.md,
+      backgroundColor: Theme.colors.border,
+      padding: 4,
+      borderRadius: Theme.radii.md,
+      marginBottom: Theme.spacing.md,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 8,
+      alignItems: "center",
+      borderRadius: Theme.radii.sm,
+    },
+    activeTab: {
+      backgroundColor: Theme.colors.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    tabText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: Theme.colors.textSecondary,
+    },
+    activeTabText: { color: Theme.colors.primary },
 
-  listContainer: { paddingHorizontal: Theme.spacing.md, paddingBottom: 100 },
-  card: {
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.radii.md,
-    padding: Theme.spacing.md,
-    marginBottom: Theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  cardMuted: { backgroundColor: Theme.colors.background, opacity: 0.7 },
-  cardHeader: { flexDirection: "row", alignItems: "center" },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: Theme.radii.full,
-    backgroundColor: Theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Theme.spacing.md,
-  },
-  cardBody: { flex: 1 },
-  title: { ...Theme.typography.body, fontWeight: "600" },
-  subtitle: { ...Theme.typography.caption, marginTop: 2 },
-  textMuted: {
-    color: Theme.colors.textSecondary,
-    textDecorationLine: "line-through",
-  },
-  actionWrap: { alignItems: "flex-end" },
-  amount: { fontSize: 15, fontWeight: "700", color: Theme.colors.textPrimary },
-  checkIcon: { marginTop: 6 },
+    listContainer: { paddingHorizontal: Theme.spacing.md, paddingBottom: 100 },
+    card: {
+      backgroundColor: Theme.colors.surface,
+      borderRadius: Theme.radii.md,
+      padding: Theme.spacing.md,
+      marginBottom: Theme.spacing.sm,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+    },
+    cardMuted: { backgroundColor: Theme.colors.background, opacity: 0.7 },
+    cardHeader: { flexDirection: "row", alignItems: "center" },
+    iconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: Theme.radii.full,
+      backgroundColor: Theme.colors.primaryLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: Theme.spacing.md,
+    },
+    cardBody: { flex: 1 },
+    title: { ...Theme.typography.body, fontWeight: "600" },
+    subtitle: { ...Theme.typography.caption, marginTop: 2 },
+    textMuted: {
+      color: Theme.colors.textSecondary,
+      textDecorationLine: "line-through",
+    },
+    actionWrap: { alignItems: "flex-end" },
+    amount: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: Theme.colors.textPrimary,
+    },
+    checkIcon: { marginTop: 6 },
 
-  badgeWrap: { alignItems: "flex-end" },
-  badgeLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: Theme.colors.textSecondary,
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  dateBadge: {
-    backgroundColor: Theme.colors.background,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Theme.radii.sm,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  dateBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: Theme.colors.textPrimary,
-  },
+    badgeWrap: { alignItems: "flex-end" },
+    badgeLabel: {
+      fontSize: 10,
+      fontWeight: "600",
+      color: Theme.colors.textSecondary,
+      textTransform: "uppercase",
+      marginBottom: 4,
+    },
+    dateBadge: {
+      backgroundColor: Theme.colors.background,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: Theme.radii.sm,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+    },
+    dateBadgeText: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: Theme.colors.textPrimary,
+    },
 
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Theme.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
-  },
+    fab: {
+      position: "absolute",
+      bottom: 24,
+      right: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: Theme.colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 5,
+      elevation: 5,
+    },
 
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: Theme.colors.surface,
-    borderTopLeftRadius: Theme.radii.lg,
-    borderTopRightRadius: Theme.radii.lg,
-    padding: Theme.spacing.lg,
-    paddingBottom: 40,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Theme.spacing.lg,
-  },
-  modalTitle: { ...Theme.typography.screenTitle, fontSize: 20 },
-  closeButton: { padding: 4 },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "flex-end",
+    },
+    modalContent: {
+      backgroundColor: Theme.colors.surface,
+      borderTopLeftRadius: Theme.radii.lg,
+      borderTopRightRadius: Theme.radii.lg,
+      padding: Theme.spacing.lg,
+      paddingBottom: 40,
+    },
+    modalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: Theme.spacing.lg,
+    },
+    modalTitle: { ...Theme.typography.screenTitle, fontSize: 20 },
+    closeButton: { padding: 4 },
 
-  input: {
-    backgroundColor: Theme.colors.background,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: Theme.radii.sm,
-    paddingHorizontal: Theme.spacing.md,
-    paddingVertical: 14,
-    fontSize: 16,
-    marginBottom: Theme.spacing.md,
-    color: Theme.colors.textPrimary,
-  },
+    input: {
+      backgroundColor: Theme.colors.background,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+      borderRadius: Theme.radii.sm,
+      paddingHorizontal: Theme.spacing.md,
+      paddingVertical: 14,
+      fontSize: 16,
+      marginBottom: Theme.spacing.md,
+      color: Theme.colors.textPrimary,
+    },
 
-  saveButton: {
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 16,
-    borderRadius: Theme.radii.md,
-    alignItems: "center",
-    marginTop: Theme.spacing.sm,
-  },
-  saveButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
-});
+    saveButton: {
+      backgroundColor: Theme.colors.primary,
+      paddingVertical: 16,
+      borderRadius: Theme.radii.md,
+      alignItems: "center",
+      marginTop: Theme.spacing.sm,
+    },
+    saveButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600" },
+  });

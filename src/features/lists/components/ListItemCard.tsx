@@ -1,93 +1,97 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Check, Trash2 } from "lucide-react-native";
-import { Theme } from "../../../core/theme";
-import { ListItem } from "../hooks/useListStore";
+import { CheckSquare, Square, Trash2 } from "lucide-react-native";
+import { useAppTheme } from "../../../core/theme";
 
+// Adjust this interface if your useListStore uses different property names (like 'text' instead of 'title')
 interface ListItemCardProps {
-  item: ListItem;
+  item: {
+    id: string;
+    title?: string;
+    text?: string;
+    isCompleted: boolean;
+    category: string;
+  };
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-export const ListItemCard: React.FC<ListItemCardProps> = ({
+export const ListItemCard = ({
   item,
   onToggle,
   onDelete,
-}) => {
+}: ListItemCardProps) => {
+  // 1. Initialize the dynamic theme
+  const Theme = useAppTheme();
+  const styles = createStyles(Theme);
+
   return (
     <View style={[styles.card, item.isCompleted && styles.cardCompleted]}>
       <TouchableOpacity
-        style={[styles.checkbox, item.isCompleted && styles.checkboxChecked]}
+        style={styles.checkboxContainer}
         onPress={() => onToggle(item.id)}
         activeOpacity={0.7}
       >
-        {item.isCompleted && (
-          <Check size={14} color="#FFFFFF" strokeWidth={3} />
+        {item.isCompleted ? (
+          <CheckSquare size={24} color={Theme.colors.success} />
+        ) : (
+          <Square size={24} color={Theme.colors.border} />
         )}
+        <Text
+          style={[
+            styles.itemText,
+            item.isCompleted && styles.itemTextCompleted,
+          ]}
+        >
+          {item.title || item.text}
+        </Text>
       </TouchableOpacity>
 
-      <View style={styles.contentContainer}>
-        <Text style={[styles.title, item.isCompleted && styles.titleCompleted]}>
-          {item.title}
-        </Text>
-        {item.assignedTo && (
-          <Text style={styles.assignee}>Assigned to {item.assignedTo}</Text>
-        )}
-      </View>
-
       <TouchableOpacity
+        style={styles.deleteButton}
         onPress={() => onDelete(item.id)}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        activeOpacity={0.7}
       >
-        <Trash2 size={18} color={Theme.colors.textSecondary} />
+        <Trash2 size={20} color={Theme.colors.danger} />
       </TouchableOpacity>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Theme.colors.surface,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: Theme.spacing.md,
-    paddingHorizontal: Theme.spacing.md,
-    borderRadius: Theme.radii.md,
-    marginBottom: Theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  cardCompleted: {
-    opacity: 0.55,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: Theme.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Theme.spacing.md,
-  },
-  checkboxChecked: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  title: {
-    ...Theme.typography.body,
-    fontWeight: "500",
-  },
-  titleCompleted: {
-    textDecorationLine: "line-through",
-    color: Theme.colors.textSecondary,
-  },
-  assignee: {
-    ...Theme.typography.caption,
-    marginTop: 2,
-  },
-});
+// 2. Wrap the styles in a function that receives the Theme
+const createStyles = (Theme: any) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: Theme.colors.surface,
+      padding: Theme.spacing.md,
+      borderRadius: Theme.radii.md,
+      marginBottom: Theme.spacing.sm,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+    },
+    cardCompleted: {
+      backgroundColor: Theme.colors.background,
+      opacity: 0.7,
+    },
+    checkboxContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      flex: 1,
+    },
+    itemText: {
+      ...Theme.typography.body,
+      marginLeft: Theme.spacing.md,
+      flex: 1,
+      color: Theme.colors.textPrimary,
+    },
+    itemTextCompleted: {
+      color: Theme.colors.textSecondary,
+      textDecorationLine: "line-through",
+    },
+    deleteButton: {
+      padding: Theme.spacing.xs,
+    },
+  });

@@ -14,13 +14,16 @@ import {
   Activity,
 } from "lucide-react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
-import { Theme } from "../../core/theme";
+import { useAppTheme } from "../../core/theme";
 
 import { useListStore } from "../lists/hooks/useListStore";
 import { useTimerStore } from "../timer/hooks/useTimerStore";
 import { useHomeHubStore } from "../home-hub/hooks/useHomeHubStore";
 
 export const DashboardScreen = () => {
+  const Theme = useAppTheme();
+  const styles = createStyles(Theme);
+
   const navigation = useNavigation<NavigationProp<any>>();
 
   // FIX: Select the raw arrays from Zustand first, THEN filter locally
@@ -34,8 +37,9 @@ export const DashboardScreen = () => {
   const { isRunning, activeLabel, remainingSeconds } = useTimerStore();
 
   const [, setTick] = useState(0);
+
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
+    let interval: ReturnType<typeof setTimeout> | null = null;
     if (isRunning) {
       interval = setInterval(() => setTick((t) => t + 1), 1000);
     }
@@ -164,114 +168,115 @@ export const DashboardScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
-  content: {
-    paddingHorizontal: Theme.spacing.md,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-  header: { marginBottom: Theme.spacing.lg },
-  subtitle: {
-    ...Theme.typography.caption,
-    marginTop: Theme.spacing.xs,
-    fontSize: 14,
-  },
+const createStyles = (Theme: any) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: Theme.colors.background },
+    content: {
+      paddingHorizontal: Theme.spacing.md,
+      paddingTop: 60,
+      paddingBottom: 40,
+    },
+    header: { marginBottom: Theme.spacing.lg },
+    subtitle: {
+      ...Theme.typography.caption,
+      marginTop: Theme.spacing.xs,
+      fontSize: 14,
+    },
 
-  widgetCard: {
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.radii.lg,
-    padding: Theme.spacing.md,
-    marginBottom: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  widgetCardActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  widgetHeader: { flexDirection: "row", alignItems: "center" },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: Theme.radii.full,
-    backgroundColor: Theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: Theme.spacing.sm,
-  },
-  widgetTitle: { flex: 1, ...Theme.typography.body, fontWeight: "600" },
-  activeTimerContent: {
-    marginTop: Theme.spacing.md,
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.1)",
-    paddingVertical: Theme.spacing.md,
-    borderRadius: Theme.radii.md,
-  },
-  activeTimerLabel: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  activeTimerDigits: {
-    color: "#FFFFFF",
-    fontSize: 36,
-    fontWeight: "700",
-    letterSpacing: -1,
-  },
+    widgetCard: {
+      backgroundColor: Theme.colors.surface,
+      borderRadius: Theme.radii.lg,
+      padding: Theme.spacing.md,
+      marginBottom: Theme.spacing.md,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+    },
+    widgetCardActive: {
+      backgroundColor: Theme.colors.primary,
+      borderColor: Theme.colors.primary,
+    },
+    widgetHeader: { flexDirection: "row", alignItems: "center" },
+    iconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: Theme.radii.full,
+      backgroundColor: Theme.colors.primaryLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: Theme.spacing.sm,
+    },
+    widgetTitle: { flex: 1, ...Theme.typography.body, fontWeight: "600" },
+    activeTimerContent: {
+      marginTop: Theme.spacing.md,
+      alignItems: "center",
+      backgroundColor: "rgba(0,0,0,0.1)",
+      paddingVertical: Theme.spacing.md,
+      borderRadius: Theme.radii.md,
+    },
+    activeTimerLabel: {
+      color: "#FFFFFF",
+      fontSize: 13,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 1,
+      marginBottom: 4,
+    },
+    activeTimerDigits: {
+      color: "#FFFFFF",
+      fontSize: 36,
+      fontWeight: "700",
+      letterSpacing: -1,
+    },
 
-  summaryCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.radii.md,
-    padding: Theme.spacing.md,
-    marginBottom: Theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  summaryLeft: { flexDirection: "row", alignItems: "center" },
-  summaryIcon: { marginRight: Theme.spacing.md },
-  summaryTitle: { ...Theme.typography.body, fontWeight: "600" },
-  summarySub: { ...Theme.typography.caption, marginTop: 2 },
-  badge: {
-    backgroundColor: Theme.colors.background,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Theme.radii.full,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: Theme.colors.textPrimary,
-  },
+    summaryCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: Theme.colors.surface,
+      borderRadius: Theme.radii.md,
+      padding: Theme.spacing.md,
+      marginBottom: Theme.spacing.sm,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+    },
+    summaryLeft: { flexDirection: "row", alignItems: "center" },
+    summaryIcon: { marginRight: Theme.spacing.md },
+    summaryTitle: { ...Theme.typography.body, fontWeight: "600" },
+    summarySub: { ...Theme.typography.caption, marginTop: 2 },
+    badge: {
+      backgroundColor: Theme.colors.background,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: Theme.radii.full,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+    },
+    badgeText: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: Theme.colors.textPrimary,
+    },
 
-  sectionHeader: {
-    marginTop: Theme.spacing.lg,
-    marginBottom: Theme.spacing.sm,
-  },
-  statusBox: {
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.radii.md,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: Theme.spacing.sm,
-  },
-  statusText: {
-    marginLeft: Theme.spacing.sm,
-    fontSize: 14,
-    color: Theme.colors.textSecondary,
-    fontWeight: "500",
-  },
-});
+    sectionHeader: {
+      marginTop: Theme.spacing.lg,
+      marginBottom: Theme.spacing.sm,
+    },
+    statusBox: {
+      backgroundColor: Theme.colors.surface,
+      borderRadius: Theme.radii.md,
+      padding: Theme.spacing.md,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+    },
+    statusRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: Theme.spacing.sm,
+    },
+    statusText: {
+      marginLeft: Theme.spacing.sm,
+      fontSize: 14,
+      color: Theme.colors.textSecondary,
+      fontWeight: "500",
+    },
+  });
