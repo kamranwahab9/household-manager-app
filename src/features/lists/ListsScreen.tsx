@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -8,11 +8,14 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { Plus } from "lucide-react-native";
 import { useAppTheme } from "../../core/theme";
 import { ItemCategory, useListStore } from "./hooks/useListStore";
 import { ListItemCard } from "./components/ListItemCard";
+import { useAuthStore } from "../auth/useAuthStore";
+import { supabase } from "../../core/services/supabase";
 
 const CATEGORIES: { label: string; value: ItemCategory }[] = [
   { label: "Groceries", value: "groceries" },
@@ -22,29 +25,99 @@ const CATEGORIES: { label: string; value: ItemCategory }[] = [
 ];
 
 export const ListsScreen = () => {
-  // 1. Initialize the dynamic theme
   const Theme = useAppTheme();
   const styles = createStyles(Theme);
 
+  const { user } = useAuthStore();
+  const [householdId, setHouseholdId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Input states
   const [inputText, setInputText] = useState("");
+  const [quantityText, setQuantityText] = useState("");
+
   const {
     items,
     activeCategory,
     setActiveCategory,
+    fetchItems,
+    subscribeToItems,
     addItem,
     toggleItem,
     deleteItem,
   } = useListStore();
 
+  // 1. Initialize Supabase Data & Subscriptions
+  useEffect(() => {
+    const initLists = async () => {
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("household_id")
+        .eq("id", user.id)
+        .single();
+
+      if (data?.household_id) {
+        setHouseholdId(data.household_id);
+
+        // Fetch existing items
+        await fetchItems(data.household_id);
+
+        // Listen for realtime changes from family members
+        subscribeToItems(data.household_id);
+      }
+      setIsLoading(false);
+    };
+
+    initLists();
+  }, [user]);
+
   const filteredItems = items.filter(
     (item) => item.category === activeCategory,
   );
 
+  // 2. Add item with quantity and householdId
   const handleAdd = () => {
-    if (!inputText.trim()) return;
-    addItem(inputText);
+    if (!inputText.trim() || !householdId) return;
+    addItem(inputText, householdId, quantityText);
     setInputText("");
+    setQuantityText(""); // Clear quantity after adding
   };
+
+  if (isLoading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color={Theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (!householdId) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center", padding: 20 },
+        ]}
+      >
+        <Text
+          style={{
+            ...Theme.typography.body,
+            textAlign: "center",
+            color: Theme.colors.textSecondary,
+          }}
+        >
+          Join a household in the Profile tab to use shared lists!
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -103,11 +176,19 @@ export const ListsScreen = () => {
         }
       />
 
-      {/* Quick Input Bar */}
+      {/* Quick Input Bar with Quantity */}
       <View style={styles.inputContainer}>
         <TextInput
+          style={styles.quantityInput}
+          placeholder="Qty (2kg)"
+          placeholderTextColor={Theme.colors.textSecondary}
+          value={quantityText}
+          onChangeText={setQuantityText}
+          returnKeyType="next"
+        />
+        <TextInput
           style={styles.input}
-          placeholder={`Add item to ${activeCategory}...`}
+          placeholder={`Add to ${activeCategory}...`}
           placeholderTextColor={Theme.colors.textSecondary}
           value={inputText}
           onChangeText={setInputText}
@@ -126,7 +207,6 @@ export const ListsScreen = () => {
   );
 };
 
-// 2. Wrap the styles in a function that receives the Theme
 const createStyles = (Theme: any) =>
   StyleSheet.create({
     container: {
@@ -190,6 +270,18 @@ const createStyles = (Theme: any) =>
       borderTopColor: Theme.colors.border,
       alignItems: "center",
     },
+    quantityInput: {
+      width: 90,
+      height: 44,
+      backgroundColor: Theme.colors.background,
+      borderRadius: Theme.radii.sm,
+      paddingHorizontal: Theme.spacing.sm,
+      fontSize: 14,
+      color: Theme.colors.textPrimary,
+      marginRight: Theme.spacing.sm,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+    },
     input: {
       flex: 1,
       height: 44,
@@ -198,6 +290,8 @@ const createStyles = (Theme: any) =>
       paddingHorizontal: Theme.spacing.md,
       fontSize: 15,
       color: Theme.colors.textPrimary,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
     },
     addButton: {
       width: 44,
