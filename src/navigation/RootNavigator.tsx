@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import {
   Home,
   ListTodo,
@@ -22,24 +22,40 @@ import { ProfileScreen } from "../features/profile/ProfileScreen";
 import { useAppTheme } from "../core/theme";
 import { ActivityIndicator, View } from "react-native";
 
-const Tab = createBottomTabNavigator();
+const Tab = createMaterialTopTabNavigator();
 
 const TabNavigator = () => {
-  // 1. Initialize the dynamic theme for the tab bar
   const Theme = useAppTheme();
 
   return (
     <Tab.Navigator
+      tabBarPosition="bottom"
       screenOptions={{
-        headerShown: false,
         tabBarActiveTintColor: Theme.colors.primary,
         tabBarInactiveTintColor: Theme.colors.textSecondary,
+        tabBarShowIcon: true,
+        tabBarShowLabel: true,
+        swipeEnabled: true,
         tabBarStyle: {
           backgroundColor: Theme.colors.surface,
           borderTopColor: Theme.colors.border,
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
+          borderTopWidth: 1,
+          height: 65,
+        },
+        tabBarIndicatorStyle: {
+          backgroundColor: Theme.colors.primary,
+          height: 3,
+          top: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          textTransform: "none",
+          margin: 0,
+        },
+        tabBarItemStyle: {
+          padding: 0,
+          justifyContent: "center",
+          alignItems: "center",
         },
       }}
     >
@@ -91,8 +107,6 @@ const TabNavigator = () => {
 
 export const RootNavigator = () => {
   const { session, setSession, isInitialized } = useAuthStore();
-
-  // 2. Initialize the dynamic theme for the loading screen
   const Theme = useAppTheme();
 
   useEffect(() => {

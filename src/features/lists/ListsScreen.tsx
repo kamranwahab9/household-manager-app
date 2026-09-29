@@ -135,7 +135,8 @@ export const ListsScreen = () => {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
       style={styles.container}
     >
       <View style={styles.header}>

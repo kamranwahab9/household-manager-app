@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import {
   Receipt,
@@ -21,16 +22,24 @@ import {
 } from "lucide-react-native";
 import { useAppTheme } from "../../core/theme";
 import { useHomeHubStore, Bill, Appliance } from "./hooks/useHomeHubStore";
+import { useAuthStore } from "../auth/useAuthStore";
+import { supabase } from "../../core/services/supabase";
 
 export const HomeHubScreen = () => {
   const Theme = useAppTheme();
   const styles = createStyles(Theme);
+
+  const { user } = useAuthStore();
+  const [householdId, setHouseholdId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const {
     activeTab,
     setActiveTab,
     bills,
     appliances,
+    fetchHubData,
+    subscribeToHub,
     toggleBillStatus,
     addBill,
     addAppliance,
@@ -41,23 +50,42 @@ export const HomeHubScreen = () => {
   // Modal State
   const [isModalVisible, setModalVisible] = useState(false);
   const [inputTitle, setInputTitle] = useState("");
-  const [inputDetail, setInputDetail] = useState(""); // Amount for bills, Brand for appliances
+  const [inputDetail, setInputDetail] = useState(""); // Amount / Brand
   const [inputDate, setInputDate] = useState("");
 
+  useEffect(() => {
+    const initHub = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("household_id")
+        .eq("id", user.id)
+        .single();
+
+      if (data?.household_id) {
+        setHouseholdId(data.household_id);
+        await fetchHubData(data.household_id);
+        subscribeToHub(data.household_id);
+      }
+      setIsLoading(false);
+    };
+
+    initHub();
+  }, [user]);
+
   const handleSave = () => {
-    if (!inputTitle || !inputDetail || !inputDate) {
+    if (!inputTitle || !inputDetail || !inputDate || !householdId) {
       Alert.alert("Missing Info", "Please fill out all fields.");
       return;
     }
 
     if (activeTab === "bills") {
       const amount = parseFloat(inputDetail) || 0;
-      addBill(inputTitle, amount, inputDate);
+      addBill(inputTitle, amount, inputDate, householdId);
     } else {
-      addAppliance(inputTitle, inputDetail, inputDate);
+      addAppliance(inputTitle, inputDetail, inputDate, householdId);
     }
 
-    // Reset and close
     setInputTitle("");
     setInputDetail("");
     setInputDate("");
@@ -78,7 +106,7 @@ export const HomeHubScreen = () => {
   const renderBill = ({ item }: { item: Bill }) => (
     <TouchableOpacity
       style={[styles.card, item.isPaid && styles.cardMuted]}
-      onPress={() => toggleBillStatus(item.id)}
+      onPress={() => toggleBillStatus(item.id, item.isPaid, user?.id || "")}
       onLongPress={() => confirmDelete(item.id, "bill")}
       activeOpacity={0.7}
     >
@@ -97,11 +125,17 @@ export const HomeHubScreen = () => {
             Rs {item.amount.toLocaleString()}
           </Text>
           {item.isPaid ? (
-            <CheckCircle2
-              size={22}
-              color={Theme.colors.success}
-              style={styles.checkIcon}
-            />
+            <View style={{ alignItems: "flex-end" }}>
+              <CheckCircle2
+                size={22}
+                color={Theme.colors.success}
+                style={styles.checkIcon}
+              />
+              {/* Shows who paid it */}
+              <Text style={styles.paidByText}>
+                {item.paidBy === user?.id ? "Paid by you" : "Paid"}
+              </Text>
+            </View>
           ) : (
             <Circle
               size={22}
@@ -143,6 +177,40 @@ export const HomeHubScreen = () => {
     </TouchableOpacity>
   );
 
+  if (isLoading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color={Theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (!householdId) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center", padding: 20 },
+        ]}
+      >
+        <Text
+          style={{
+            ...Theme.typography.body,
+            textAlign: "center",
+            color: Theme.colors.textSecondary,
+          }}
+        >
+          Join a household in the Profile tab to use the Home Hub!
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -153,7 +221,6 @@ export const HomeHubScreen = () => {
         </Text>
       </View>
 
-      {/* Segmented Tab Control */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === "bills" && styles.activeTab]}
@@ -183,7 +250,6 @@ export const HomeHubScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Dynamic List FIX: Split into two separate lists so TypeScript understands the data structures */}
       {activeTab === "bills" ? (
         <FlatList
           data={bills}
@@ -202,7 +268,6 @@ export const HomeHubScreen = () => {
         />
       )}
 
-      {/* Floating Action Button */}
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.8}
@@ -211,7 +276,6 @@ export const HomeHubScreen = () => {
         <Plus size={24} color="#FFFFFF" />
       </TouchableOpacity>
 
-      {/* Add New Item Modal */}
       <Modal
         visible={isModalVisible}
         animationType="slide"
@@ -220,7 +284,8 @@ export const HomeHubScreen = () => {
       >
         <KeyboardAvoidingView
           style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior="padding"
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 25}
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -350,13 +415,19 @@ const createStyles = (Theme: any) =>
       color: Theme.colors.textSecondary,
       textDecorationLine: "line-through",
     },
-    actionWrap: { alignItems: "flex-end" },
+    actionWrap: { alignItems: "flex-end", justifyContent: "center" },
     amount: {
       fontSize: 15,
       fontWeight: "700",
       color: Theme.colors.textPrimary,
     },
     checkIcon: { marginTop: 6 },
+    paidByText: {
+      fontSize: 10,
+      color: Theme.colors.success,
+      marginTop: 2,
+      fontWeight: "600",
+    },
 
     badgeWrap: { alignItems: "flex-end" },
     badgeLabel: {
