@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { Plus } from "lucide-react-native";
 import { useAppTheme } from "../../core/theme";
@@ -17,12 +18,14 @@ import { ListItemCard } from "./components/ListItemCard";
 import { useAuthStore } from "../auth/useAuthStore";
 import { supabase } from "../../core/services/supabase";
 
+// Removed "Bills" to consolidate it into the Home Hub Dashboard
 const CATEGORIES: { label: string; value: ItemCategory }[] = [
   { label: "Groceries", value: "groceries" },
   { label: "Chores", value: "chores" },
   { label: "Cooking", value: "cooking" },
-  { label: "Bills", value: "bills" },
 ];
+
+const QUICK_UNITS = ["kg", "dozen", "pcs", "liters", "pkts"];
 
 export const ListsScreen = () => {
   const Theme = useAppTheme();
@@ -77,12 +80,23 @@ export const ListsScreen = () => {
     (item) => item.category === activeCategory,
   );
 
+  // Determine if the current category needs a quantity field
+  const needsQuantity =
+    activeCategory === "groceries" || activeCategory === "cooking";
+
   // 2. Add item with quantity and householdId
   const handleAdd = () => {
     if (!inputText.trim() || !householdId) return;
-    addItem(inputText, householdId, quantityText);
+    addItem(inputText, householdId, needsQuantity ? quantityText : "");
     setInputText("");
     setQuantityText(""); // Clear quantity after adding
+  };
+
+  // 3. Handle quick unit selection
+  const handleUnitPress = (unit: string) => {
+    // Extracts the number if they already typed one, otherwise defaults to "1"
+    const currentNumber = quantityText.replace(/[^0-9.]/g, "") || "1";
+    setQuantityText(`${currentNumber} ${unit}`);
   };
 
   if (isLoading) {
@@ -176,32 +190,58 @@ export const ListsScreen = () => {
         }
       />
 
-      {/* Quick Input Bar with Quantity */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.quantityInput}
-          placeholder="Qty (2kg)"
-          placeholderTextColor={Theme.colors.textSecondary}
-          value={quantityText}
-          onChangeText={setQuantityText}
-          returnKeyType="next"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder={`Add to ${activeCategory}...`}
-          placeholderTextColor={Theme.colors.textSecondary}
-          value={inputText}
-          onChangeText={setInputText}
-          onSubmitEditing={handleAdd}
-          returnKeyType="done"
-        />
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleAdd}
-          activeOpacity={0.8}
-        >
-          <Plus size={20} color="#FFFFFF" strokeWidth={2.5} />
-        </TouchableOpacity>
+      {/* Bottom Input Section */}
+      <View style={styles.bottomSection}>
+        {/* Quick Unit Chips (Only shows if category needs quantity) */}
+        {needsQuantity && (
+          <View style={styles.unitContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyboardShouldPersistTaps="always"
+            >
+              {QUICK_UNITS.map((unit) => (
+                <TouchableOpacity
+                  key={unit}
+                  style={styles.unitChip}
+                  onPress={() => handleUnitPress(unit)}
+                >
+                  <Text style={styles.unitText}>{unit}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Input Bar */}
+        <View style={styles.inputContainer}>
+          {needsQuantity && (
+            <TextInput
+              style={styles.quantityInput}
+              placeholder="Qty"
+              placeholderTextColor={Theme.colors.textSecondary}
+              value={quantityText}
+              onChangeText={setQuantityText}
+              returnKeyType="next"
+            />
+          )}
+          <TextInput
+            style={styles.input}
+            placeholder={`Add to ${activeCategory}...`}
+            placeholderTextColor={Theme.colors.textSecondary}
+            value={inputText}
+            onChangeText={setInputText}
+            onSubmitEditing={handleAdd}
+            returnKeyType="done"
+          />
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={handleAdd}
+            activeOpacity={0.8}
+          >
+            <Plus size={20} color="#FFFFFF" strokeWidth={2.5} />
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -251,7 +291,7 @@ const createStyles = (Theme: any) =>
     listContainer: {
       paddingHorizontal: Theme.spacing.md,
       paddingTop: Theme.spacing.sm,
-      paddingBottom: 100,
+      paddingBottom: 120, // Increased to avoid overlap with new taller bottom section
     },
     emptyContainer: {
       alignItems: "center",
@@ -262,16 +302,38 @@ const createStyles = (Theme: any) =>
       ...Theme.typography.caption,
       color: Theme.colors.textSecondary,
     },
-    inputContainer: {
-      flexDirection: "row",
-      padding: Theme.spacing.md,
+    bottomSection: {
       backgroundColor: Theme.colors.surface,
       borderTopWidth: 1,
       borderTopColor: Theme.colors.border,
+    },
+    unitContainer: {
+      paddingHorizontal: Theme.spacing.md,
+      paddingTop: Theme.spacing.sm,
+      paddingBottom: 4,
+    },
+    unitChip: {
+      backgroundColor: Theme.colors.background,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: Theme.radii.sm,
+      marginRight: 8,
+      borderWidth: 1,
+      borderColor: Theme.colors.border,
+    },
+    unitText: {
+      fontSize: 12,
+      color: Theme.colors.textPrimary,
+      fontWeight: "500",
+    },
+    inputContainer: {
+      flexDirection: "row",
+      padding: Theme.spacing.md,
+      paddingTop: Theme.spacing.xs,
       alignItems: "center",
     },
     quantityInput: {
-      width: 90,
+      width: 80,
       height: 44,
       backgroundColor: Theme.colors.background,
       borderRadius: Theme.radii.sm,
@@ -281,6 +343,7 @@ const createStyles = (Theme: any) =>
       marginRight: Theme.spacing.sm,
       borderWidth: 1,
       borderColor: Theme.colors.border,
+      textAlign: "center",
     },
     input: {
       flex: 1,
