@@ -9,6 +9,7 @@
     "@react-navigation/native": "^7.4.1",
     "@supabase/supabase-js": "^2.117.2",
     "expo": "~57.0.26",
+    "expo-device": "~57.0.2",
     "expo-haptics": "~57.0.3",
     "expo-notifications": "~57.0.21",
     "expo-secure-store": "~57.0.4",

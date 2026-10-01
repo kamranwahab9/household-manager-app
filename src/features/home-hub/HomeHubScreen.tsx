@@ -25,6 +25,12 @@ import { useHomeHubStore, Bill, Appliance } from "./hooks/useHomeHubStore";
 import { useAuthStore } from "../auth/useAuthStore";
 import { supabase } from "../../core/services/supabase";
 
+// NEW: Import the notification service we just created
+import {
+  setupNotifications,
+  scheduleBillReminder,
+} from "../../core/services/notifications";
+
 export const HomeHubScreen = () => {
   const Theme = useAppTheme();
   const styles = createStyles(Theme);
@@ -55,6 +61,9 @@ export const HomeHubScreen = () => {
 
   useEffect(() => {
     const initHub = async () => {
+      // NEW: Ask for notification permissions on load
+      await setupNotifications();
+
       if (!user) return;
       const { data } = await supabase
         .from("profiles")
@@ -73,7 +82,8 @@ export const HomeHubScreen = () => {
     initHub();
   }, [user]);
 
-  const handleSave = () => {
+  // NEW: Made handleSave async so we can schedule the notification
+  const handleSave = async () => {
     if (!inputTitle || !inputDetail || !inputDate || !householdId) {
       Alert.alert("Missing Info", "Please fill out all fields.");
       return;
@@ -81,9 +91,12 @@ export const HomeHubScreen = () => {
 
     if (activeTab === "bills") {
       const amount = parseFloat(inputDetail) || 0;
-      addBill(inputTitle, amount, inputDate, householdId);
+      await addBill(inputTitle, amount, inputDate, householdId);
+
+      // NEW: Schedule the local push notification!
+      await scheduleBillReminder(inputTitle, inputDate);
     } else {
-      addAppliance(inputTitle, inputDetail, inputDate, householdId);
+      await addAppliance(inputTitle, inputDetail, inputDate, householdId);
     }
 
     setInputTitle("");
@@ -131,7 +144,6 @@ export const HomeHubScreen = () => {
                 color={Theme.colors.success}
                 style={styles.checkIcon}
               />
-              {/* Shows who paid it */}
               <Text style={styles.paidByText}>
                 {item.paidBy === user?.id ? "Paid by you" : "Paid"}
               </Text>
